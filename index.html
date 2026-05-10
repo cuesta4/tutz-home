@@ -1,11 +1,233 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-    <meta http-equiv="refresh" content="0; url=chrome://newtab/">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Abrindo Anori…</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap');
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #1f6feb;
+      --accent: #388bfd;
+      --glow: #1f6feb55;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --steam-blue: #1b2838;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Rajdhani', sans-serif;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* Grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(31,111,235,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(31,111,235,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* Radial glow center */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(31,111,235,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 52px 60px;
+      text-align: center;
+      box-shadow: 0 0 40px var(--glow), 0 20px 60px rgba(0,0,0,0.5);
+      max-width: 440px;
+      width: 90%;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1f6feb, #388bfd);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 0 24px rgba(56,139,253,0.4);
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 24px rgba(56,139,253,0.4); }
+      50%       { box-shadow: 0 0 40px rgba(56,139,253,0.7); }
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 32px;
+    }
+
+    .status {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      margin-bottom: 28px;
+      min-height: 1.2em;
+    }
+
+    /* Progress bar */
+    .bar-wrap {
+      background: rgba(31,111,235,0.12);
+      border-radius: 4px;
+      height: 4px;
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+    .bar {
+      height: 100%;
+      background: linear-gradient(90deg, #1f6feb, #388bfd);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    /* Manual button (shown if popup blocked) */
+    .btn {
+      display: none;
+      margin: 0 auto;
+      padding: 12px 32px;
+      background: linear-gradient(135deg, #1f6feb, #388bfd);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(31,111,235,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(31,111,235,0.6);
+    }
+    .btn:active { transform: translateY(0); }
+
+    .footer {
+      margin-top: 32px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem;
+      color: rgba(139,148,158,0.5);
+      letter-spacing: 0.05em;
+    }
+  </style>
 </head>
 <body>
-    <script>
-        window.location.replace("chrome://newtab/");
-    </script>
+  <div class="card">
+    <div class="icon">⚡</div>
+    <h1>Anori</h1>
+    <p class="subtitle">STEAM BROWSER · REDIRECT BRIDGE</p>
+    <p class="status" id="status">Inicializando…</p>
+    <div class="bar-wrap"><div class="bar" id="bar"></div></div>
+    <button class="btn" id="btn" onclick="launch()">Abrir Anori manualmente</button>
+    <p class="footer">cuesta4.github.io/steam-home-tutz</p>
+  </div>
+
+  <script>
+    const status = document.getElementById('status');
+    const bar    = document.getElementById('bar');
+    const btn    = document.getElementById('btn');
+
+    const steps = [
+      [0,   'Inicializando…'],
+      [300, 'Carregando extensão…'],
+      [800, 'Abrindo nova aba…'],
+    ];
+
+    steps.forEach(([delay, msg]) =>
+      setTimeout(() => { status.textContent = msg; }, delay)
+    );
+
+    // Animate progress bar to 90% during the wait
+    let pct = 0;
+    const ticker = setInterval(() => {
+      pct = Math.min(pct + 2, 90);
+      bar.style.width = pct + '%';
+      if (pct >= 90) clearInterval(ticker);
+    }, 30);
+
+    function launch() {
+      const w = window.open('', '_blank');
+      if (w) {
+        // Complete the bar and close this tab
+        bar.style.width = '100%';
+        status.textContent = 'Pronto! Fechando…';
+        setTimeout(() => window.close(), 600);
+      } else {
+        status.textContent = 'Pop-up bloqueado. Tente o botão.';
+      }
+    }
+
+    // Auto-launch after brief delay
+    setTimeout(() => {
+      const w = window.open('', '_blank');
+      if (w) {
+        bar.style.width = '100%';
+        status.textContent = 'Pronto! Fechando…';
+        setTimeout(() => window.close(), 600);
+      } else {
+        // Popup blocked — show manual button
+        status.textContent = 'Pop-up bloqueado pelo navegador.';
+        btn.style.display = 'block';
+        bar.style.width = '100%';
+      }
+    }, 1000);
+  </script>
 </body>
 </html>
