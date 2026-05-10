@@ -107,6 +107,7 @@
       gap: 2px;
       flex: 1;
       min-width: 0;
+      text-decoration: none;
       cursor: pointer;
     }
     .link-card-name {
@@ -500,10 +501,10 @@ function renderLinks() {
     el.dataset.idx = idx;
     el.innerHTML   = `
       <span class="drag-handle" title="Reordenar">⠿</span>
-      <div class="link-card-inner" data-url="${escAttr(link.url)}">
+      <a class="link-card-inner" href="${escAttr(link.url)}">
         <span class="link-card-name">${escHtml(link.name)}</span>
         <span class="link-card-url">${escHtml(link.url.replace(/^https?:\/\//, ''))}</span>
-      </div>
+      </a>
       <button class="link-card-del" title="Remover">✕</button>
     `;
 
