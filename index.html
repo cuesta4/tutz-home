@@ -533,7 +533,7 @@ function renderLinks() {
 
     el.querySelector('.link-card-inner').addEventListener('click', e => {
       e.stopPropagation();
-      window.open(link.url, '_blank', 'noopener,noreferrer');
+      window.location.href = link.url;
     });
 
     el.querySelector('.link-card-del').addEventListener('click', e => {
@@ -638,7 +638,7 @@ NOTES.forEach(cfg => {
 function doSearch() {
   const q = document.getElementById('search-input').value.trim();
   if (!q) return;
-  window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank', 'noopener,noreferrer');
+  window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(q);
 }
 document.getElementById('search-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') doSearch();
