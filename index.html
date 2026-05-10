@@ -107,7 +107,7 @@
       gap: 2px;
       flex: 1;
       min-width: 0;
-      text-decoration: none;
+      cursor: pointer;
     }
     .link-card-name {
       font-weight: 600;
@@ -220,13 +220,64 @@
       overflow: hidden;
     }
 
-    /* ── Notepads column ────────────────────────────────── */
-    .notepads-col {
+    /* ── Notes section (search fixed + notes scroll) ───── */
+    .notes-section {
       display: flex;
       flex-direction: column;
       gap: 10px;
       overflow: hidden;
       height: 100%;
+    }
+
+    /* ── Search bar ─────────────────────────────────────── */
+    .search-bar {
+      display: flex;
+      gap: 7px;
+      flex-shrink: 0;
+    }
+    .search-bar input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      padding: 9px 14px;
+      outline: none;
+      transition: border-color var(--transition);
+      caret-color: var(--orange);
+    }
+    .search-bar input:focus { border-color: var(--orange-dim); }
+    .search-bar input::placeholder { color: var(--text-faint); }
+    .search-bar button {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      padding: 9px 14px;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .search-bar button:hover {
+      border-color: var(--orange-dim);
+      color: var(--orange);
+      background: var(--orange-glow);
+    }
+
+    /* ── Notepads scroll area ───────────────────────────── */
+    .notepads-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+      padding-right: 3px;
     }
 
     /* ── Notepad ────────────────────────────────────────── */
@@ -384,7 +435,13 @@
 
   <!-- MAIN -->
   <main class="main">
-    <div class="notepads-col" id="notepads-col"></div>
+    <div class="notes-section">
+      <div class="search-bar">
+        <input id="search-input" type="text" placeholder="Pesquisar no Google…" autocomplete="off" />
+        <button id="search-btn">Buscar →</button>
+      </div>
+      <div class="notepads-col" id="notepads-col"></div>
+    </div>
 
     <aside class="right-panel">
       <div class="widget-card">
@@ -443,10 +500,10 @@ function renderLinks() {
     el.dataset.idx = idx;
     el.innerHTML   = `
       <span class="drag-handle" title="Reordenar">⠿</span>
-      <a class="link-card-inner" href="${escAttr(link.url)}" target="_blank" rel="noopener noreferrer">
+      <div class="link-card-inner" data-url="${escAttr(link.url)}">
         <span class="link-card-name">${escHtml(link.name)}</span>
         <span class="link-card-url">${escHtml(link.url.replace(/^https?:\/\//, ''))}</span>
-      </a>
+      </div>
       <button class="link-card-del" title="Remover">✕</button>
     `;
 
@@ -472,6 +529,11 @@ function renderLinks() {
       links.splice(targetIdx, 0, moved);
       saveLinks();
       renderLinks();
+    });
+
+    el.querySelector('.link-card-inner').addEventListener('click', e => {
+      e.stopPropagation();
+      window.open(link.url, '_blank', 'noopener,noreferrer');
     });
 
     el.querySelector('.link-card-del').addEventListener('click', e => {
@@ -569,6 +631,19 @@ NOTES.forEach(cfg => {
 
   col.appendChild(wrap);
 });
+
+/* ══════════════════════════════════════════════
+   SEARCH
+══════════════════════════════════════════════ */
+function doSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+  window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank', 'noopener,noreferrer');
+}
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+document.getElementById('search-btn').addEventListener('click', doSearch);
 
 /* ══════════════════════════════════════════════
    CLOCK
