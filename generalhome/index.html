@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutz Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Design tokens ───────────────────────────────── */
+    :root {
+      --bg:           #181a1c;
+      --surface:      #21252a;
+      --surface-2:    #292e35;
+      --surface-3:    #313740;
+      --border:       #30363e;
+      --border-light: #3c4450;
+      --orange:       #c47a3a;
+      --orange-dim:   #9e5f28;
+      --orange-glow:  rgba(196,122,58,.13);
+      --orange-text:  #d08848;
+      --text:         #cdc8c2;
+      --text-muted:   #78736d;
+      --text-faint:   #454240;
+      --radius:       11px;
+      --radius-sm:    7px;
+      --t:            .15s ease;
+    }
+
+    /* ── Reset ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+    }
+
+    /* ── App shell ───────────────────────────────────── */
+    .app {
+      display: grid;
+      grid-template-rows: 46px 1fr;
+      height: 100vh;
+    }
+
+    /* ── Topbar ──────────────────────────────────────── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      gap: 9px;
+    }
+    .topbar-pip {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 6px var(--orange-dim);
+      flex-shrink: 0;
+    }
+    .topbar-title {
+      font-size: 12.5px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text-muted);
+      letter-spacing: .05em;
+    }
+    .topbar-title b { color: var(--text); font-weight: 600; }
+
+    /* ── Three-column content ────────────────────────── */
+    .content {
+      display: grid;
+      grid-template-columns: 256px 1fr 218px;
+      overflow: hidden;
+    }
+
+    /* ══════════════════════════════════════════════════
+       LEFT COLUMN
+    ══════════════════════════════════════════════════ */
+    .left-col {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    /* Search */
+    .search-wrap {
+      padding: 12px 12px 10px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .search-row {
+      display: flex;
+      gap: 6px;
+    }
+    .search-row input {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12.5px;
+      padding: 7px 11px;
+      outline: none;
+      caret-color: var(--orange);
+      transition: border-color var(--t);
+    }
+    .search-row input:focus { border-color: var(--orange-dim); }
+    .search-row input::placeholder { color: var(--text-faint); }
+    .search-row button {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      padding: 7px 12px;
+      cursor: pointer;
+      transition: var(--t);
+    }
+    .search-row button:hover {
+      border-color: var(--orange-dim);
+      color: var(--orange-text);
+      background: var(--orange-glow);
+    }
+
+    /* Todo */
+    .todo-wrap {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 9px;
+    }
+    .section-label {
+      font-size: 9px;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .todo-list { display: flex; flex-direction: column; gap: 2px; }
+    .todo-empty {
+      font-family: 'DM Mono', monospace;
+      font-size: 10.5px;
+      color: var(--text-faint);
+      padding: 4px 4px 2px;
+    }
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 6px;
+      border-radius: var(--radius-sm);
+      transition: background var(--t);
+    }
+    .todo-item:hover { background: var(--surface-2); }
+    .todo-cb {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border: 1.5px solid var(--border-light);
+      border-radius: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+      transition: var(--t);
+    }
+    .todo-cb:checked {
+      background: var(--orange-dim);
+      border-color: var(--orange-dim);
+    }
+    .todo-cb:checked::after {
+      content: '';
+      position: absolute;
+      left: 3px; top: 1px;
+      width: 5px; height: 8px;
+      border: 1.5px solid #fff;
+      border-top: none; border-left: none;
+      transform: rotate(40deg);
+    }
+    .todo-label {
+      flex: 1;
+      font-size: 12px;
+      color: var(--text);
+      cursor: pointer;
+      line-height: 1.3;
+    }
+    .todo-item.done .todo-label {
+      text-decoration: line-through;
+      color: var(--text-faint);
+    }
+    .todo-del {
+      background: none; border: none;
+      color: var(--text-faint);
+      font-size: 10px;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+      opacity: 0;
+      transition: var(--t);
+      flex-shrink: 0;
+    }
+    .todo-item:hover .todo-del { opacity: 1; }
+    .todo-del:hover { color: #b84040; }
+    .todo-add-row {
+      display: flex;
+      gap: 5px;
+      margin-top: 8px;
+    }
+    .todo-add-row input {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11.5px;
+      padding: 5px 9px;
+      outline: none;
+      caret-color: var(--orange);
+      transition: border-color var(--t);
+    }
+    .todo-add-row input:focus { border-color: var(--orange-dim); }
+    .todo-add-row input::placeholder { color: var(--text-faint); }
+    .todo-add-row button {
+      background: var(--orange-glow);
+      border: 1px solid var(--orange-dim);
+      border-radius: var(--radius-sm);
+      color: var(--orange-text);
+      font-size: 15px; line-height: 1;
+      cursor: pointer;
+      padding: 4px 10px;
+      transition: var(--t);
+    }
+    .todo-add-row button:hover { background: rgba(196,122,58,.25); }
+
+    /* Note */
+    .note-wrap {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+    .note-header {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 12px 7px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .note-pip {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--orange);
+      opacity: .55;
+      flex-shrink: 0;
+    }
+    .note-title-in {
+      flex: 1;
+      background: none; border: none;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      outline: none;
+      caret-color: var(--orange);
+    }
+    .note-title-in::placeholder { color: var(--text-faint); }
+    .note-body-ta {
+      flex: 1; min-height: 0;
+      background: none; border: none;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      line-height: 1.8;
+      padding: 9px 12px;
+      resize: none;
+      outline: none;
+      caret-color: var(--orange);
+    }
+    .note-body-ta::placeholder { color: var(--text-faint); }
+    .note-footer {
+      padding: 4px 12px;
+      border-top: 1px solid var(--border);
+      font-size: 8.5px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text-faint);
+      display: flex;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .save-s.flash { color: var(--orange-text); }
+
+    /* ══════════════════════════════════════════════════
+       CENTER — link grid
+    ══════════════════════════════════════════════════ */
+    .center-col {
+      padding: 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* add form */
+    .add-form {
+      display: none;
+      flex-direction: column;
+      gap: 7px;
+      padding: 13px;
+      background: var(--surface-2);
+      border: 1px solid var(--orange-dim);
+      border-radius: var(--radius);
+    }
+    .add-form.open { display: flex; }
+    .add-form input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      padding: 7px 10px;
+      outline: none;
+      transition: border-color var(--t);
+    }
+    .add-form input:focus { border-color: var(--orange); }
+    .add-form input::placeholder { color: var(--text-faint); }
+    .btn-row { display: flex; gap: 6px; }
+    .bsm {
+      flex: 1; padding: 6px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      transition: var(--t);
+      background: none;
+    }
+    .bsm-ok { border-color: var(--orange-dim); color: var(--orange-text); background: var(--orange-glow); }
+    .bsm-ok:hover { background: rgba(196,122,58,.25); }
+    .bsm-no { color: var(--text-muted); }
+    .bsm-no:hover { border-color: var(--text-muted); color: var(--text); }
+
+    /* grid */
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+    }
+
+    .lcard {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 6px;
+      padding: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      text-decoration: none;
+      cursor: pointer;
+      transition: border-color var(--t), background var(--t);
+      position: relative;
+      aspect-ratio: 1.1 / 1;
+      user-select: none;
+    }
+    .lcard:hover { border-color: var(--orange-dim); background: var(--surface-2); }
+    .lcard.drag-over { border-color: var(--orange); border-style: dashed; background: var(--orange-glow); }
+    .lcard.dragging { opacity: .25; }
+    .lcard-favicon {
+      position: absolute;
+      top: 13px; left: 13px;
+      width: 22px; height: 22px;
+      border-radius: 4px;
+      opacity: .75;
+      pointer-events: none;
+    }
+    .lcard-name {
+      font-weight: 600;
+      font-size: 12.5px;
+      color: var(--orange-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .lcard-url {
+      font-family: 'DM Mono', monospace;
+      font-size: 8.5px;
+      color: var(--text-faint);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .lcard-del {
+      position: absolute;
+      top: 7px; right: 7px;
+      background: none; border: none;
+      color: var(--text-faint);
+      font-size: 10px;
+      cursor: pointer;
+      padding: 3px 5px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: var(--t);
+    }
+    .lcard:hover .lcard-del { opacity: 1; }
+    .lcard-del:hover { color: #b84040; background: rgba(184,64,64,.15); }
+
+    /* add-card tile */
+    .lcard-add {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      background: none;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      color: var(--text-faint);
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      transition: var(--t);
+      aspect-ratio: 1.1 / 1;
+    }
+    .lcard-add:hover { border-color: var(--orange-dim); color: var(--orange-text); }
+    .lcard-add-icon { font-size: 20px; line-height: 1; font-family: 'DM Sans', sans-serif; }
+
+    /* ══════════════════════════════════════════════════
+       RIGHT COLUMN
+    ══════════════════════════════════════════════════ */
+    .right-col {
+      border-left: 1px solid var(--border);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      overflow-y: auto;
+    }
+    .wcard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 13px;
+      flex-shrink: 0;
+    }
+    .wlabel {
+      font-size: 7.5px;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 10px;
+    }
+
+    /* Clock */
+    .clock-time {
+      font-family: 'DM Mono', monospace;
+      font-size: 30px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1;
+      letter-spacing: .02em;
+    }
+    .clock-dt {
+      font-family: 'DM Mono', monospace;
+      font-size: 9.5px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Weather */
+    .weather-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .weather-sym { font-size: 26px; line-height: 1; }
+    .weather-temp {
+      font-family: 'DM Mono', monospace;
+      font-size: 26px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1;
+    }
+    .weather-c { font-size: 13px; color: var(--text-muted); }
+    .weather-meta {
+      margin-top: 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      font-family: 'DM Mono', monospace;
+      font-size: 9.5px;
+      color: var(--text-muted);
+    }
+    .weather-loading {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--text-faint);
+    }
+    .weather-err { color: #a05050; }
+
+    /* ── Utils ───────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-pip"></div>
+    <div class="topbar-title"><b>Tutz</b> Home</div>
+  </header>
+
+  <div class="content">
+
+    <!-- ════ LEFT ════ -->
+    <div class="left-col">
+
+      <div class="search-wrap">
+        <div class="search-row">
+          <input id="s-input" type="text" placeholder="Pesquisar no Google…" autocomplete="off" />
+          <button id="s-btn">→</button>
+        </div>
+      </div>
+
+      <div class="todo-wrap">
+        <div class="section-header">
+          <span class="section-label">Tarefas</span>
+        </div>
+        <div class="todo-list" id="todo-list">
+          <span class="todo-empty" id="todo-empty">Nenhuma tarefa.</span>
+        </div>
+        <div class="todo-add-row">
+          <input id="todo-in" type="text" placeholder="Nova tarefa…" autocomplete="off" />
+          <button id="todo-add">+</button>
+        </div>
+      </div>
+
+      <div class="note-wrap">
+        <div class="note-header">
+          <div class="note-pip"></div>
+          <input class="note-title-in" id="nt" type="text" placeholder="Anotações…" spellcheck="false" />
+        </div>
+        <textarea class="note-body-ta" id="nb" placeholder="Escreva aqui…" spellcheck="false"></textarea>
+        <div class="note-footer">
+          <span class="save-s" id="ns">salvo</span>
+          <span id="nc">0 chars</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════ CENTER ════ -->
+    <div class="center-col">
+      <div class="add-form" id="add-form">
+        <input id="f-name" type="text" placeholder="Nome (ex: Reddit)" />
+        <input id="f-url"  type="text" placeholder="URL (ex: https://reddit.com)" />
+        <div class="btn-row">
+          <button class="bsm bsm-ok" id="f-ok">+ Salvar</button>
+          <button class="bsm bsm-no" id="f-cancel">Cancelar</button>
+        </div>
+      </div>
+      <div class="links-grid" id="links-grid"></div>
+    </div>
+
+    <!-- ════ RIGHT ════ -->
+    <div class="right-col">
+      <div class="wcard">
+        <div class="wlabel">Hora local</div>
+        <div class="clock-time" id="clock">00:00:00</div>
+        <div class="clock-dt"   id="clock-dt">–</div>
+      </div>
+      <div class="wcard">
+        <div class="wlabel">Clima · Salvador</div>
+        <div id="weather"><span class="weather-loading">carregando…</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   SEARCH
+════════════════════════════════════════════════ */
+function doSearch() {
+  const q = document.getElementById('s-input').value.trim();
+  if (!q) return;
+  window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+}
+document.getElementById('s-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+document.getElementById('s-btn').addEventListener('click', doSearch);
+
+/* ════════════════════════════════════════════════
+   LINKS GRID
+════════════════════════════════════════════════ */
+const DEFAULT_LINKS = [
+  { name: 'Facebook',  url: 'https://facebook.com'    },
+  { name: 'Instagram', url: 'https://instagram.com'   },
+  { name: 'X',         url: 'https://x.com'           },
+  { name: 'Youtube',   url: 'https://youtube.com'     },
+  { name: 'Gmail',     url: 'https://gmail.com'       },
+  { name: 'CS',        url: 'https://youtube.com'     },
+  { name: 'Backlogg',  url: 'https://backloggd.com'   },
+  { name: 'deals.gg',  url: 'https://gg.deals'        },
+];
+
+let links = JSON.parse(localStorage.getItem('th_links') || 'null') || DEFAULT_LINKS;
+let dragSrc = null;
+
+function domain(url) {
+  try { return new URL(url).hostname; } catch { return url; }
+}
+function faviconSrc(url) {
+  return 'https://www.google.com/s2/favicons?domain=' + domain(url) + '&sz=32';
+}
+function saveLinks() { localStorage.setItem('th_links', JSON.stringify(links)); }
+
+function renderGrid() {
+  const grid = document.getElementById('links-grid');
+  grid.innerHTML = '';
+
+  links.forEach((lnk, idx) => {
+    const el = document.createElement('div');
+    el.className = 'lcard';
+    el.draggable  = true;
+    el.dataset.idx = idx;
+    el.innerHTML = `
+      <img class="lcard-favicon" src="${faviconSrc(lnk.url)}" alt="" loading="lazy" />
+      <button class="lcard-del" title="Remover">✕</button>
+      <div class="lcard-name">${escH(lnk.name)}</div>
+      <div class="lcard-url">${escH(domain(lnk.url))}</div>
+    `;
+
+    /* navigate on left-click */
+    el.addEventListener('click', e => {
+      if (e.target.classList.contains('lcard-del')) return;
+      if (e.button !== 0) return;
+      window.location.href = lnk.url;
+    });
+    /* middle-click → new tab */
+    el.addEventListener('auxclick', e => {
+      if (e.button === 1) { e.preventDefault(); window.open(lnk.url, '_blank', 'noopener'); }
+    });
+
+    /* drag-reorder */
+    el.addEventListener('dragstart', e => {
+      dragSrc = idx;
+      setTimeout(() => el.classList.add('dragging'), 0);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      grid.querySelectorAll('.lcard').forEach(c => c.classList.remove('drag-over'));
+    });
+    el.addEventListener('dragover', e => {
+      e.preventDefault();
+      grid.querySelectorAll('.lcard').forEach(c => c.classList.remove('drag-over'));
+      el.classList.add('drag-over');
+    });
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      const target = +el.dataset.idx;
+      if (dragSrc === null || dragSrc === target) return;
+      const [moved] = links.splice(dragSrc, 1);
+      links.splice(target, 0, moved);
+      saveLinks(); renderGrid();
+    });
+
+    /* delete */
+    el.querySelector('.lcard-del').addEventListener('click', e => {
+      e.stopPropagation();
+      links.splice(idx, 1);
+      saveLinks(); renderGrid();
+    });
+
+    grid.appendChild(el);
+  });
+
+  /* add tile */
+  const addTile = document.createElement('button');
+  addTile.className = 'lcard-add';
+  addTile.innerHTML = '<span class="lcard-add-icon">+</span><span>novo link</span>';
+  addTile.addEventListener('click', () => {
+    document.getElementById('add-form').classList.add('open');
+    document.getElementById('f-name').focus();
+  });
+  grid.appendChild(addTile);
+}
+
+/* add form */
+document.getElementById('f-ok').addEventListener('click', () => {
+  const name = document.getElementById('f-name').value.trim();
+  let   url  = document.getElementById('f-url').value.trim();
+  if (!name || !url) return;
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  links.push({ name, url });
+  saveLinks(); renderGrid();
+  document.getElementById('f-name').value = document.getElementById('f-url').value = '';
+  document.getElementById('add-form').classList.remove('open');
+});
+document.getElementById('f-cancel').addEventListener('click', () => {
+  document.getElementById('f-name').value = document.getElementById('f-url').value = '';
+  document.getElementById('add-form').classList.remove('open');
+});
+
+/* ════════════════════════════════════════════════
+   TODO
+════════════════════════════════════════════════ */
+let todos = JSON.parse(localStorage.getItem('th_todos') || '[]');
+function saveTodos() { localStorage.setItem('th_todos', JSON.stringify(todos)); }
+
+function renderTodos() {
+  const list  = document.getElementById('todo-list');
+  const empty = document.getElementById('todo-empty');
+  list.querySelectorAll('.todo-item').forEach(el => el.remove());
+  empty.style.display = todos.length ? 'none' : '';
+
+  todos.forEach((t, idx) => {
+    const row = document.createElement('div');
+    row.className = 'todo-item' + (t.done ? ' done' : '');
+    row.innerHTML = `
+      <input type="checkbox" class="todo-cb" ${t.done ? 'checked' : ''} />
+      <span class="todo-label">${escH(t.text)}</span>
+      <button class="todo-del">✕</button>
+    `;
+    row.querySelector('.todo-cb').addEventListener('change', e => {
+      todos[idx].done = e.target.checked;
+      saveTodos(); renderTodos();
+    });
+    row.querySelector('.todo-label').addEventListener('click', () => {
+      todos[idx].done = !todos[idx].done;
+      saveTodos(); renderTodos();
+    });
+    row.querySelector('.todo-del').addEventListener('click', e => {
+      e.stopPropagation();
+      todos.splice(idx, 1);
+      saveTodos(); renderTodos();
+    });
+    list.insertBefore(row, empty);
+  });
+}
+
+function addTodo() {
+  const inp = document.getElementById('todo-in');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  todos.push({ text: txt, done: false });
+  saveTodos(); renderTodos();
+  inp.value = '';
+}
+document.getElementById('todo-add').addEventListener('click', addTodo);
+document.getElementById('todo-in').addEventListener('keydown', e => { if (e.key === 'Enter') addTodo(); });
+
+/* ════════════════════════════════════════════════
+   NOTE
+════════════════════════════════════════════════ */
+const ntEl = document.getElementById('nt');
+const nbEl = document.getElementById('nb');
+const nsEl = document.getElementById('ns');
+const ncEl = document.getElementById('nc');
+
+ntEl.value = localStorage.getItem('th_note_t') || '';
+nbEl.value = localStorage.getItem('th_note_b') || '';
+ncEl.textContent = nbEl.value.length + ' chars';
+
+let noteTimer;
+function schedNote() {
+  clearTimeout(noteTimer);
+  nsEl.textContent = 'digitando…'; nsEl.classList.remove('flash');
+  noteTimer = setTimeout(() => {
+    localStorage.setItem('th_note_t', ntEl.value);
+    localStorage.setItem('th_note_b', nbEl.value);
+    nsEl.textContent = 'salvo'; nsEl.classList.add('flash');
+    setTimeout(() => nsEl.classList.remove('flash'), 1400);
+  }, 700);
+}
+ntEl.addEventListener('input', schedNote);
+nbEl.addEventListener('input', () => { ncEl.textContent = nbEl.value.length + ' chars'; schedNote(); });
+
+/* ════════════════════════════════════════════════
+   CLOCK
+════════════════════════════════════════════════ */
+function pad(n) { return String(n).padStart(2, '0'); }
+const DAYS   = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+function tickClock() {
+  const n = new Date();
+  document.getElementById('clock').textContent    = pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+  document.getElementById('clock-dt').textContent = DAYS[n.getDay()] + ' · ' + n.getDate() + ' ' + MONTHS[n.getMonth()] + ' ' + n.getFullYear();
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+/* ════════════════════════════════════════════════
+   WEATHER — Open-Meteo (free, no key)
+   Coords: Salvador, BA  (-12.9711, -38.5108)
+════════════════════════════════════════════════ */
+const WMO = {
+  0:  ['☀','Céu limpo'],
+  1:  ['🌤','Maiorm. limpo'], 2: ['⛅','Parcialm. nublado'], 3: ['☁','Nublado'],
+  45: ['🌫','Neblina'],       48: ['🌫','Neblina c/ geada'],
+  51: ['🌦','Garoa leve'],    53: ['🌦','Garoa moderada'],  55: ['🌦','Garoa densa'],
+  61: ['🌧','Chuva leve'],    63: ['🌧','Chuva moderada'],  65: ['🌧','Chuva forte'],
+  71: ['❄','Neve leve'],      73: ['❄','Neve moderada'],    75: ['❄','Neve forte'],
+  77: ['❄','Granizo'],
+  80: ['🌧','Pancadas leves'],81: ['🌧','Pancadas mod.'],   82: ['⛈','Pancadas fortes'],
+  95: ['⛈','Trovoada'],       96: ['⛈','Trovoada c/ granizo'], 99: ['⛈','Trovoada intensa'],
+};
+function wmoInfo(code) { return WMO[code] || ['🌡','Desconhecido']; }
+
+async function fetchWeather() {
+  const el = document.getElementById('weather');
+  try {
+    const r = await fetch(
+      'https://api.open-meteo.com/v1/forecast' +
+      '?latitude=-12.9711&longitude=-38.5108' +
+      '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m' +
+      '&wind_speed_unit=kmh&temperature_unit=celsius'
+    );
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    const c = d.current;
+    const [sym, desc] = wmoInfo(c.weather_code);
+    el.innerHTML = `
+      <div class="weather-row">
+        <span class="weather-sym">${sym}</span>
+        <span class="weather-temp">${Math.round(c.temperature_2m)}<span class="weather-c"> °C</span></span>
+      </div>
+      <div class="weather-meta">
+        <span>${desc}</span>
+        <span>Sensação: ${Math.round(c.apparent_temperature)} °C</span>
+        <span>Vento: ${Math.round(c.wind_speed_10m)} km/h</span>
+        <span>Umidade: ${c.relative_humidity_2m}%</span>
+      </div>`;
+  } catch {
+    el.innerHTML = '<span class="weather-loading weather-err">Erro ao carregar.</span>';
+  }
+}
+fetchWeather();
+setInterval(fetchWeather, 10 * 60 * 1000); /* refresh a cada 10 min */
+
+/* ════════════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════════════ */
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ── Init ── */
+renderGrid();
+renderTodos();
+</script>
+</body>
+</html>
