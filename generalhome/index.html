@@ -114,8 +114,17 @@
     .btn:disabled { opacity: .46; cursor: default; transform: none; }
 
     .layout { display: grid; grid-template-columns: minmax(320px, 390px) minmax(420px, 1fr) 260px; gap: 14px; margin-top: 14px; align-items: start; }
-    .stack { display: grid; gap: 14px; }
-    .center-stack { width: min(100%, 720px); justify-self: center; display: grid; gap: 14px; align-content: start; }
+    .stack { min-width: 0; display: grid; gap: 14px; }
+    .center-zone { min-width: 0; container: shortcuts / inline-size; }
+    .center-stack {
+      --shortcut-size: 124px;
+      --shortcut-columns: 5;
+      width: min(100%, 656px);
+      margin-inline: auto;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
     .card {
       background: rgba(21, 25, 30, .94);
       border: 1px solid var(--border);
@@ -179,9 +188,9 @@
     .scratchpad textarea { min-height: 152px; padding: 10px; resize: vertical; font-family: "DM Mono", monospace; font-size: 11px; line-height: 1.65; }
     .scratch-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; color: var(--faint); font-family: "DM Mono", monospace; font-size: 9px; }
 
-    .links-grid { display: grid; grid-template-columns: repeat(auto-fit, 124px); justify-content: center; gap: 9px; }
+    .links-grid { display: grid; grid-template-columns: repeat(var(--shortcut-columns), var(--shortcut-size)); justify-content: start; gap: 9px; }
     .link-card {
-      width: 124px;
+      width: var(--shortcut-size);
       aspect-ratio: 1 / 1;
       min-height: 0;
       display: flex;
@@ -210,9 +219,10 @@
     .link-add { border-style: dashed; display: grid; place-items: center; min-height: 0; color: var(--faint); text-align: center; font-size: 12px; }
     .link-add:hover { color: var(--accent-strong); }
 
-    .pomodoro { overflow: visible; }
+    .pomodoro { width: 100%; min-width: 0; overflow: visible; }
     .pomodoro-body { display: grid; gap: 12px; padding: 14px; }
-    .pomodoro-main { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .pomodoro-main { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .pomodoro-main > * { min-width: 0; }
     .pomodoro-phase { color: var(--accent-strong); font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; }
     .pomodoro-clock { margin-top: 2px; color: var(--text); font-family: "DM Mono", monospace; font-size: clamp(35px, 5.8vw, 54px); letter-spacing: .04em; }
     .pomodoro-meta { margin-top: 5px; color: var(--faint); font-family: "DM Mono", monospace; font-size: 9px; }
@@ -272,6 +282,37 @@
     .toast { padding: 11px 12px; color: var(--text); background: #1b2027; border: 1px solid var(--border-strong); border-radius: 10px; box-shadow: var(--shadow); font-size: 12px; }
     .toast.error { border-color: rgba(202, 119, 114, .52); }
 
+    /* The shortcut grid and Pomodoro card share one responsive width. */
+    @container shortcuts (max-width: 655px) {
+      .center-stack { --shortcut-size: 112px; --shortcut-columns: 5; width: min(100%, 596px); }
+    }
+    @container shortcuts (max-width: 595px) {
+      .center-stack { --shortcut-size: 124px; --shortcut-columns: 4; width: min(100%, 523px); }
+      .pomodoro-main { align-items: flex-start; flex-direction: column; gap: 12px; }
+      .pomodoro-controls { justify-content: flex-start; }
+    }
+    @container shortcuts (max-width: 522px) {
+      .center-stack { --shortcut-size: 112px; --shortcut-columns: 4; width: min(100%, 475px); }
+      .pomodoro-options { grid-template-columns: 1fr; }
+    }
+    @container shortcuts (max-width: 474px) {
+      .center-stack { --shortcut-size: 124px; --shortcut-columns: 3; width: min(100%, 390px); }
+    }
+    @container shortcuts (max-width: 389px) {
+      .center-stack { --shortcut-size: 112px; --shortcut-columns: 3; width: min(100%, 354px); }
+    }
+    @container shortcuts (max-width: 353px) {
+      .center-stack { --shortcut-size: 124px; --shortcut-columns: 2; width: min(100%, 257px); }
+      .pomodoro-body { padding: 12px; }
+      .pomodoro-clock { font-size: 35px; }
+    }
+    @container shortcuts (max-width: 256px) {
+      .center-stack { --shortcut-size: 112px; --shortcut-columns: 2; width: min(100%, 233px); }
+    }
+    @container shortcuts (max-width: 232px) {
+      .center-stack { --shortcut-size: 124px; --shortcut-columns: 1; width: min(100%, 124px); }
+    }
+
     @media (max-width: 1180px) {
       .layout { grid-template-columns: minmax(300px, 360px) minmax(360px, 1fr); }
       .right-col { grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -281,13 +322,8 @@
       .topbar { grid-template-columns: 1fr auto; gap: 10px; top: 6px; }
       .search { grid-column: 1 / -1; grid-row: 2; }
       .layout { grid-template-columns: 1fr; }
-      .center-stack { grid-row: 1; }
+      .center-zone { grid-row: 1; }
       .right-col { grid-column: auto; grid-template-columns: 1fr; }
-      .links-grid { grid-template-columns: repeat(auto-fit, 112px); }
-      .link-card { width: 112px; }
-      .pomodoro-main { align-items: flex-start; flex-direction: column; }
-      .pomodoro-controls { justify-content: flex-start; }
-      .pomodoro-options { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -340,45 +376,47 @@
         </section>
       </div>
 
-      <section class="center-stack">
-        <div class="links-grid" id="links-grid"></div>
+      <section class="center-zone">
+        <div class="center-stack">
+          <div class="links-grid" id="links-grid"></div>
 
-        <section class="card pomodoro">
-          <div class="pomodoro-body">
-            <div class="pomodoro-main">
-              <div>
-                <div class="pomodoro-phase" id="pomodoro-phase">Sessão de estudo</div>
-                <div class="pomodoro-clock" id="pomodoro-clock">01:00:00</div>
-                <div class="pomodoro-meta" id="pomodoro-meta">0 sessões concluídas</div>
-              </div>
-              <div class="pomodoro-controls">
-                <button class="btn accent" id="pomodoro-toggle" type="button">Iniciar</button>
-                <button class="btn" id="pomodoro-reset" type="button">Reiniciar</button>
-                <button class="btn" id="pomodoro-skip" type="button">Avançar fase</button>
-              </div>
-            </div>
-            <div class="pomodoro-options">
-              <div class="pomodoro-group">
-                <div class="pomodoro-label">Sessão de estudo</div>
-                <div class="pomodoro-chips" id="pomodoro-study-options">
-                  <button class="chip" type="button" data-study="60">1 h</button>
-                  <button class="chip" type="button" data-study="120">2 h</button>
-                  <button class="chip" type="button" data-study="240">4 h</button>
+          <section class="card pomodoro">
+            <div class="pomodoro-body">
+              <div class="pomodoro-main">
+                <div>
+                  <div class="pomodoro-phase" id="pomodoro-phase">Sessão de estudo</div>
+                  <div class="pomodoro-clock" id="pomodoro-clock">01:00:00</div>
+                  <div class="pomodoro-meta" id="pomodoro-meta">0 sessões concluídas</div>
+                </div>
+                <div class="pomodoro-controls">
+                  <button class="btn accent" id="pomodoro-toggle" type="button">Iniciar</button>
+                  <button class="btn" id="pomodoro-reset" type="button">Reiniciar</button>
+                  <button class="btn" id="pomodoro-skip" type="button">Avançar fase</button>
                 </div>
               </div>
-              <div class="pomodoro-group">
-                <div class="pomodoro-label">Descanso</div>
-                <div class="pomodoro-chips" id="pomodoro-break-options">
-                  <button class="chip" type="button" data-break="5">5 min</button>
-                  <button class="chip" type="button" data-break="10">10 min</button>
-                  <button class="chip" type="button" data-break="15">15 min</button>
-                  <button class="chip" type="button" data-break="30">30 min</button>
-                  <button class="chip" type="button" data-break="60">60 min</button>
+              <div class="pomodoro-options">
+                <div class="pomodoro-group">
+                  <div class="pomodoro-label">Sessão de estudo</div>
+                  <div class="pomodoro-chips" id="pomodoro-study-options">
+                    <button class="chip" type="button" data-study="60">1 h</button>
+                    <button class="chip" type="button" data-study="120">2 h</button>
+                    <button class="chip" type="button" data-study="240">4 h</button>
+                  </div>
+                </div>
+                <div class="pomodoro-group">
+                  <div class="pomodoro-label">Descanso</div>
+                  <div class="pomodoro-chips" id="pomodoro-break-options">
+                    <button class="chip" type="button" data-break="5">5 min</button>
+                    <button class="chip" type="button" data-break="10">10 min</button>
+                    <button class="chip" type="button" data-break="15">15 min</button>
+                    <button class="chip" type="button" data-break="30">30 min</button>
+                    <button class="chip" type="button" data-break="60">60 min</button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </section>
 
       <aside class="stack right-col">
