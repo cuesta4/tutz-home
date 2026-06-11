@@ -4,11 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
+  <meta name="tutz-build" content="2026-06-11-oauth-lazy-load-v1" />
   <title>Tutz Home</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
       --bg: #0d1014;
@@ -443,7 +443,7 @@
         <div class="notice"><strong>OAuth para página estática.</strong> Use uma credencial OAuth 2.0 do tipo <em>Web application</em>. Cadastre esta origem JavaScript autorizada: <span class="mono" id="oauth-current-origin">carregando…</span>.</div>
         <div class="field"><label for="oauth-client-id">Google OAuth Client ID</label><input class="input" id="oauth-client-id" type="text" autocomplete="off" spellcheck="false" placeholder="000000000000-xxxxxxxx.apps.googleusercontent.com" /></div>
         <div class="notice"><strong>Use somente o Client ID.</strong> Não cole chave de API, Client Secret, JSON de credenciais nem uma credencial do tipo <em>Desktop app</em>. O valor precisa terminar em <span class="mono">.apps.googleusercontent.com</span>.</div>
-        <div class="notice">O Client ID é salvo localmente. O token permanece apenas em memória. Após recarregar a página, a dashboard tenta obter um novo token silenciosamente; caso o Google exija interação, use o botão <strong>Conectar Google Tasks</strong>.</div>
+        <div class="notice">O Client ID e o token temporário são salvos somente no armazenamento local deste navegador. Ao recarregar a página, a dashboard reutiliza o token enquanto ele ainda for válido. Quando expirar, use novamente o botão <strong>Conectar Google Tasks</strong>.</div>
       </div>
       <footer class="modal-actions"><button class="btn danger" id="oauth-clear" type="button">Limpar configuração</button><button class="btn accent" id="settings-save" type="button">Salvar</button></footer>
     </section>
@@ -482,7 +482,8 @@
 
     const STORAGE_KEYS = {
       oauthClientId: "th_google_tasks_client_id",
-      oauthAutoConnect: "th_google_tasks_auto_connect",
+      oauthAccessToken: "th_google_tasks_access_token",
+      oauthAccessTokenExpiresAt: "th_google_tasks_access_token_expires_at",
       links: "th_links",
       quickLinks: "th_quick_links",
       scratchpad: "th_scratchpad",
@@ -493,6 +494,8 @@
     const TASKS_API = "https://tasks.googleapis.com/tasks/v1";
     const HOME_LIST_TITLE = "#HOME";
     const DEFAULT_DOCUMENT_TITLE = "Tutz Home";
+    const ACCESS_TOKEN_EXPIRY_SKEW_MS = 60 * 1000;
+    const BUILD_ID = "2026-06-11-oauth-lazy-load-v1";
 
     const DEFAULT_LINKS = [
       { name: "Facebook", url: "https://facebook.com" },
@@ -835,8 +838,7 @@
         state.oauthClientId = validateOAuthClientId($("oauth-client-id").value);
         if (state.oauthClientId) store.set(STORAGE_KEYS.oauthClientId, state.oauthClientId);
         else store.remove(STORAGE_KEYS.oauthClientId);
-        if (!state.oauthClientId || state.oauthClientId !== previousClientId) store.remove(STORAGE_KEYS.oauthAutoConnect);
-        state.accessToken = "";
+        if (!state.oauthClientId || state.oauthClientId !== previousClientId) clearStoredAccessToken();
         state.tokenClient = null;
         state.oauthRequestMode = "";
         state.homeTasklist = null;
@@ -858,48 +860,53 @@
       if ($("tasks-status-pip")) $("tasks-status-pip").className = "status-pip" + (connected ? " ok" : "");
     }
 
-    function waitForGoogleIdentity(timeoutMs = 7000) {
+    function loadGoogleIdentity() {
+      if (window.google?.accounts?.oauth2) return Promise.resolve();
       return new Promise((resolve, reject) => {
-        const started = Date.now();
-        const timer = setInterval(() => {
-          if (window.google?.accounts?.oauth2) { clearInterval(timer); resolve(); }
-          else if (Date.now() - started > timeoutMs) { clearInterval(timer); reject(new Error("A biblioteca de autenticação do Google não carregou.")); }
-        }, 80);
+        const existing = document.getElementById("google-identity-services-script");
+        if (existing) {
+          existing.addEventListener("load", () => resolve(), { once: true });
+          existing.addEventListener("error", () => reject(new Error("A biblioteca de autenticação do Google não carregou.")), { once: true });
+          return;
+        }
+        const script = document.createElement("script");
+        script.id = "google-identity-services-script";
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.addEventListener("load", () => resolve(), { once: true });
+        script.addEventListener("error", () => reject(new Error("A biblioteca de autenticação do Google não carregou.")), { once: true });
+        document.head.append(script);
       });
     }
 
     async function configureTokenClient() {
       state.oauthClientId = validateOAuthClientId(state.oauthClientId);
       if (!state.oauthClientId) throw new Error("Configure primeiro o OAuth Client ID.");
-      await waitForGoogleIdentity();
+      await loadGoogleIdentity();
       state.tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: state.oauthClientId,
         scope: TASKS_SCOPE,
         callback: async (response) => {
-          const mode = state.oauthRequestMode || "manual";
           state.oauthRequestMode = "";
           if (response.error) {
-            if (mode === "silent") console.info("[Tutz Home] Reconexão silenciosa indisponível:", response.error);
-            else toast("Não foi possível autorizar o Google Tasks: " + response.error, true);
+            toast("Não foi possível autorizar o Google Tasks: " + response.error, true);
             return;
           }
           if (!response.access_token) {
-            if (mode !== "silent") toast("O Google não retornou um token de acesso.", true);
+            toast("O Google não retornou um token de acesso.", true);
             return;
           }
-          state.accessToken = response.access_token;
-          store.set(STORAGE_KEYS.oauthAutoConnect, "1");
+          persistAccessToken(response);
           setTaskConnectionUi(true);
           try {
             await loadHomeTasks();
-            if (mode !== "silent") toast("Google Tasks conectado à lista #HOME.");
+            toast("Google Tasks conectado à lista #HOME.");
           } catch (error) { handleApiError(error); }
         },
         error_callback: (error) => {
-          const mode = state.oauthRequestMode || "manual";
           state.oauthRequestMode = "";
-          if (mode === "silent") console.info("[Tutz Home] Reconexão silenciosa não concluída:", error.type || "erro desconhecido");
-          else toast("A janela de autenticação não foi concluída: " + (error.type || "erro desconhecido"), true);
+          toast("A janela de autenticação não foi concluída: " + (error.type || "erro desconhecido"), true);
         }
       });
     }
@@ -913,14 +920,43 @@
       } catch (error) { reportError(error, "Falha ao conectar Google Tasks"); }
     }
 
-    async function autoReconnectTasks() {
-      if (!state.oauthClientId || store.get(STORAGE_KEYS.oauthAutoConnect) !== "1") return;
+    function clearStoredAccessToken() {
+      state.accessToken = "";
+      store.remove(STORAGE_KEYS.oauthAccessToken);
+      store.remove(STORAGE_KEYS.oauthAccessTokenExpiresAt);
+    }
+
+    function persistAccessToken(response) {
+      const accessToken = String(response?.access_token || "").trim();
+      if (!accessToken) throw new Error("O Google não retornou um token de acesso.");
+      const expiresInSeconds = Number(response?.expires_in);
+      const lifetimeMs = Number.isFinite(expiresInSeconds) && expiresInSeconds > 0
+        ? expiresInSeconds * 1000
+        : 55 * 60 * 1000;
+      state.accessToken = accessToken;
+      store.set(STORAGE_KEYS.oauthAccessToken, accessToken);
+      store.set(STORAGE_KEYS.oauthAccessTokenExpiresAt, String(Date.now() + lifetimeMs));
+    }
+
+    function restoreStoredAccessToken() {
+      const accessToken = String(store.get(STORAGE_KEYS.oauthAccessToken) || "").trim();
+      const expiresAt = Number(store.get(STORAGE_KEYS.oauthAccessTokenExpiresAt));
+      if (!accessToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now() + ACCESS_TOKEN_EXPIRY_SKEW_MS) {
+        clearStoredAccessToken();
+        return false;
+      }
+      state.accessToken = accessToken;
+      return true;
+    }
+
+    async function restoreStoredTasksSession() {
+      if (!restoreStoredAccessToken()) return;
+      setTaskConnectionUi(true);
       try {
-        await configureTokenClient();
-        state.oauthRequestMode = "silent";
-        state.tokenClient.requestAccessToken({ prompt: "none" });
+        await loadHomeTasks();
+        console.info("[Tutz Home] Sessão temporária do Google Tasks restaurada do armazenamento local.");
       } catch (error) {
-        console.info("[Tutz Home] Reconexão silenciosa indisponível:", error?.message || String(error));
+        handleApiError(error);
       }
     }
 
@@ -953,7 +989,7 @@
 
     function handleApiError(error) {
       if (error.status === 401) {
-        state.accessToken = "";
+        clearStoredAccessToken();
         state.homeTasklist = null;
         setTaskConnectionUi(false);
         toast("A sessão expirou. Conecte novamente ao Google Tasks.", true);
@@ -1277,12 +1313,12 @@
         tickClock();
         renderPomodoro();
         loadWeather();
-        window.setTimeout(autoReconnectTasks, 0);
+        window.setTimeout(restoreStoredTasksSession, 0);
         setInterval(tickClock, 1000);
         setInterval(renderPomodoro, 1000);
         setInterval(loadWeather, 10 * 60 * 1000);
         $("search-input")?.focus();
-        console.info("[Tutz Home] Inicialização concluída.");
+        console.info("[Tutz Home] Inicialização concluída.", BUILD_ID);
       } catch (error) {
         reportError(error, "Falha ao inicializar a dashboard");
       }
