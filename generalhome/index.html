@@ -381,40 +381,40 @@
           <div class="links-grid" id="links-grid"></div>
 
           <section class="card pomodoro">
-            <div class="pomodoro-body">
-              <div class="pomodoro-main">
-                <div>
-                  <div class="pomodoro-phase" id="pomodoro-phase">Sessão de estudo</div>
-                  <div class="pomodoro-clock" id="pomodoro-clock">01:00:00</div>
-                  <div class="pomodoro-meta" id="pomodoro-meta">0 sessões concluídas</div>
-                </div>
-                <div class="pomodoro-controls">
-                  <button class="btn accent" id="pomodoro-toggle" type="button">Iniciar</button>
-                  <button class="btn" id="pomodoro-reset" type="button">Reiniciar</button>
-                  <button class="btn" id="pomodoro-skip" type="button">Avançar fase</button>
+          <div class="pomodoro-body">
+            <div class="pomodoro-main">
+              <div>
+                <div class="pomodoro-phase" id="pomodoro-phase">Sessão de estudo</div>
+                <div class="pomodoro-clock" id="pomodoro-clock">01:00:00</div>
+                <div class="pomodoro-meta" id="pomodoro-meta">0 sessões concluídas</div>
+              </div>
+              <div class="pomodoro-controls">
+                <button class="btn accent" id="pomodoro-toggle" type="button">Iniciar</button>
+                <button class="btn" id="pomodoro-reset" type="button">Reiniciar</button>
+                <button class="btn" id="pomodoro-skip" type="button">Avançar fase</button>
+              </div>
+            </div>
+            <div class="pomodoro-options">
+              <div class="pomodoro-group">
+                <div class="pomodoro-label">Sessão de estudo</div>
+                <div class="pomodoro-chips" id="pomodoro-study-options">
+                  <button class="chip" type="button" data-study="60">1 h</button>
+                  <button class="chip" type="button" data-study="120">2 h</button>
+                  <button class="chip" type="button" data-study="240">4 h</button>
                 </div>
               </div>
-              <div class="pomodoro-options">
-                <div class="pomodoro-group">
-                  <div class="pomodoro-label">Sessão de estudo</div>
-                  <div class="pomodoro-chips" id="pomodoro-study-options">
-                    <button class="chip" type="button" data-study="60">1 h</button>
-                    <button class="chip" type="button" data-study="120">2 h</button>
-                    <button class="chip" type="button" data-study="240">4 h</button>
-                  </div>
-                </div>
-                <div class="pomodoro-group">
-                  <div class="pomodoro-label">Descanso</div>
-                  <div class="pomodoro-chips" id="pomodoro-break-options">
-                    <button class="chip" type="button" data-break="5">5 min</button>
-                    <button class="chip" type="button" data-break="10">10 min</button>
-                    <button class="chip" type="button" data-break="15">15 min</button>
-                    <button class="chip" type="button" data-break="30">30 min</button>
-                    <button class="chip" type="button" data-break="60">60 min</button>
-                  </div>
+              <div class="pomodoro-group">
+                <div class="pomodoro-label">Descanso</div>
+                <div class="pomodoro-chips" id="pomodoro-break-options">
+                  <button class="chip" type="button" data-break="5">5 min</button>
+                  <button class="chip" type="button" data-break="10">10 min</button>
+                  <button class="chip" type="button" data-break="15">15 min</button>
+                  <button class="chip" type="button" data-break="30">30 min</button>
+                  <button class="chip" type="button" data-break="60">60 min</button>
                 </div>
               </div>
             </div>
+          </div>
           </section>
         </div>
       </section>
@@ -441,8 +441,9 @@
       <header class="modal-head"><div class="modal-title" id="settings-title">Configurar Google Tasks</div><button class="btn ghost" id="settings-close" type="button" aria-label="Fechar">✕</button></header>
       <div class="modal-body">
         <div class="notice"><strong>OAuth para página estática.</strong> Use uma credencial OAuth 2.0 do tipo <em>Web application</em>. Cadastre esta origem JavaScript autorizada: <span class="mono" id="oauth-current-origin">carregando…</span>.</div>
-        <div class="field"><label for="oauth-client-id">Google OAuth Client ID</label><input class="input" id="oauth-client-id" type="text" autocomplete="off" placeholder="000000000000-xxxxxxxx.apps.googleusercontent.com" /></div>
-        <div class="notice">O Client ID é salvo localmente. O token permanece apenas em memória e deverá ser autorizado novamente após expirar ou ao recarregar a página.</div>
+        <div class="field"><label for="oauth-client-id">Google OAuth Client ID</label><input class="input" id="oauth-client-id" type="text" autocomplete="off" spellcheck="false" placeholder="000000000000-xxxxxxxx.apps.googleusercontent.com" /></div>
+        <div class="notice"><strong>Use somente o Client ID.</strong> Não cole chave de API, Client Secret, JSON de credenciais nem uma credencial do tipo <em>Desktop app</em>. O valor precisa terminar em <span class="mono">.apps.googleusercontent.com</span>.</div>
+        <div class="notice">O Client ID é salvo localmente. O token permanece apenas em memória. Após recarregar a página, a dashboard tenta obter um novo token silenciosamente; caso o Google exija interação, use o botão <strong>Conectar Google Tasks</strong>.</div>
       </div>
       <footer class="modal-actions"><button class="btn danger" id="oauth-clear" type="button">Limpar configuração</button><button class="btn accent" id="settings-save" type="button">Salvar</button></footer>
     </section>
@@ -481,6 +482,7 @@
 
     const STORAGE_KEYS = {
       oauthClientId: "th_google_tasks_client_id",
+      oauthAutoConnect: "th_google_tasks_auto_connect",
       links: "th_links",
       quickLinks: "th_quick_links",
       scratchpad: "th_scratchpad",
@@ -670,6 +672,7 @@
       oauthClientId: store.get(STORAGE_KEYS.oauthClientId) || "",
       accessToken: "",
       tokenClient: null,
+      oauthRequestMode: "",
       homeTasklist: null,
       tasks: [],
       links: loadLinks(),
@@ -808,19 +811,42 @@
     function closeLinkModal() { $("link-layer")?.classList.add("hidden"); $("link-form")?.reset(); }
     function openQuickLinkModal() { $("quick-link-layer")?.classList.remove("hidden"); $("quick-link-name")?.focus(); }
     function closeQuickLinkModal() { $("quick-link-layer")?.classList.add("hidden"); $("quick-link-form")?.reset(); }
+    const OAUTH_CLIENT_ID_RE = /^[0-9]+-[a-z0-9_-]+\.apps\.googleusercontent\.com$/i;
+
+    function normalizeOAuthClientId(value) {
+      return String(value || "").trim();
+    }
+
+    function validateOAuthClientId(value) {
+      const clientId = normalizeOAuthClientId(value);
+      if (!clientId) return "";
+      if (!OAUTH_CLIENT_ID_RE.test(clientId)) {
+        throw new Error("OAuth Client ID inválido. Cole somente a credencial Web application terminada em .apps.googleusercontent.com.");
+      }
+      return clientId;
+    }
+
     function openSettings() { $("oauth-client-id").value = state.oauthClientId; $("settings-layer")?.classList.remove("hidden"); $("oauth-client-id")?.focus(); }
     function closeSettings() { $("settings-layer")?.classList.add("hidden"); }
 
     function saveSettings() {
-      state.oauthClientId = $("oauth-client-id").value.trim();
-      if (state.oauthClientId) store.set(STORAGE_KEYS.oauthClientId, state.oauthClientId);
-      else store.remove(STORAGE_KEYS.oauthClientId);
-      state.accessToken = "";
-      state.tokenClient = null;
-      state.homeTasklist = null;
-      setTaskConnectionUi(false);
-      closeSettings();
-      toast(state.oauthClientId ? "OAuth Client ID salvo localmente." : "Configuração removida.");
+      try {
+        const previousClientId = state.oauthClientId;
+        state.oauthClientId = validateOAuthClientId($("oauth-client-id").value);
+        if (state.oauthClientId) store.set(STORAGE_KEYS.oauthClientId, state.oauthClientId);
+        else store.remove(STORAGE_KEYS.oauthClientId);
+        if (!state.oauthClientId || state.oauthClientId !== previousClientId) store.remove(STORAGE_KEYS.oauthAutoConnect);
+        state.accessToken = "";
+        state.tokenClient = null;
+        state.oauthRequestMode = "";
+        state.homeTasklist = null;
+        setTaskConnectionUi(false);
+        closeSettings();
+        toast(state.oauthClientId ? "OAuth Client ID salvo localmente." : "Configuração removida.");
+      } catch (error) {
+        reportError(error, "Não foi possível salvar a configuração OAuth");
+        $("oauth-client-id")?.focus();
+      }
     }
 
     function clearSettings() { $("oauth-client-id").value = ""; saveSettings(); }
@@ -843,19 +869,38 @@
     }
 
     async function configureTokenClient() {
+      state.oauthClientId = validateOAuthClientId(state.oauthClientId);
       if (!state.oauthClientId) throw new Error("Configure primeiro o OAuth Client ID.");
       await waitForGoogleIdentity();
       state.tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: state.oauthClientId,
         scope: TASKS_SCOPE,
         callback: async (response) => {
-          if (response.error) { toast("Não foi possível autorizar o Google Tasks: " + response.error, true); return; }
+          const mode = state.oauthRequestMode || "manual";
+          state.oauthRequestMode = "";
+          if (response.error) {
+            if (mode === "silent") console.info("[Tutz Home] Reconexão silenciosa indisponível:", response.error);
+            else toast("Não foi possível autorizar o Google Tasks: " + response.error, true);
+            return;
+          }
+          if (!response.access_token) {
+            if (mode !== "silent") toast("O Google não retornou um token de acesso.", true);
+            return;
+          }
           state.accessToken = response.access_token;
+          store.set(STORAGE_KEYS.oauthAutoConnect, "1");
           setTaskConnectionUi(true);
-          try { await loadHomeTasks(); toast("Google Tasks conectado à lista #HOME."); }
-          catch (error) { handleApiError(error); }
+          try {
+            await loadHomeTasks();
+            if (mode !== "silent") toast("Google Tasks conectado à lista #HOME.");
+          } catch (error) { handleApiError(error); }
         },
-        error_callback: (error) => toast("A janela de autenticação não foi concluída: " + (error.type || "erro desconhecido"), true)
+        error_callback: (error) => {
+          const mode = state.oauthRequestMode || "manual";
+          state.oauthRequestMode = "";
+          if (mode === "silent") console.info("[Tutz Home] Reconexão silenciosa não concluída:", error.type || "erro desconhecido");
+          else toast("A janela de autenticação não foi concluída: " + (error.type || "erro desconhecido"), true);
+        }
       });
     }
 
@@ -863,8 +908,20 @@
       if (!state.oauthClientId) { openSettings(); toast("Informe seu OAuth Client ID antes de conectar."); return; }
       try {
         await configureTokenClient();
-        state.tokenClient.requestAccessToken({ prompt: state.accessToken ? "" : "consent" });
+        state.oauthRequestMode = "manual";
+        state.tokenClient.requestAccessToken({ prompt: "" });
       } catch (error) { reportError(error, "Falha ao conectar Google Tasks"); }
+    }
+
+    async function autoReconnectTasks() {
+      if (!state.oauthClientId || store.get(STORAGE_KEYS.oauthAutoConnect) !== "1") return;
+      try {
+        await configureTokenClient();
+        state.oauthRequestMode = "silent";
+        state.tokenClient.requestAccessToken({ prompt: "none" });
+      } catch (error) {
+        console.info("[Tutz Home] Reconexão silenciosa indisponível:", error?.message || String(error));
+      }
     }
 
     async function api(path, options = {}) {
@@ -1220,6 +1277,7 @@
         tickClock();
         renderPomodoro();
         loadWeather();
+        window.setTimeout(autoReconnectTasks, 0);
         setInterval(tickClock, 1000);
         setInterval(renderPomodoro, 1000);
         setInterval(loadWeather, 10 * 60 * 1000);
