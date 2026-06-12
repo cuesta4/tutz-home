@@ -1,677 +1,677 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="tutz-build" content="steamhome-port-v1" />
   <title>Tutz Steam Home</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
-    /* ── Variables ──────────────────────────────────────── */
     :root {
-      --bg:          #1a1c1e;
-      --surface:     #22252a;
-      --surface-2:   #2a2e34;
-      --border:      #33383f;
-      --orange:      #c47a3a;
-      --orange-dim:  #a3632a;
-      --orange-glow: rgba(196,122,58,.15);
-      --text:        #d4cfc9;
-      --text-muted:  #7a7873;
-      --text-faint:  #4a4845;
-      --radius:      10px;
-      --transition:  .16s ease;
+      --bg: #0d1014;
+      --surface: #15191e;
+      --surface-2: #1b2027;
+      --surface-3: #242b34;
+      --border: rgba(216, 225, 235, .10);
+      --border-strong: rgba(216, 225, 235, .18);
+      --text: #e8edf2;
+      --muted: #a0aab5;
+      --faint: #707b87;
+      --accent: #d88643;
+      --accent-strong: #ed9b57;
+      --accent-soft: rgba(216, 134, 67, .12);
+      --danger: #cf7777;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 16px 48px rgba(0, 0, 0, .16);
+      --transition: 140ms ease;
+      --mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    /* ── Reset ──────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      height: 100%;
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
       background: var(--bg);
       color: var(--text);
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--sans);
       font-size: 14px;
-      overflow: hidden;
     }
-
-    /* ── App grid ───────────────────────────────────────── */
-    .app {
-      display: grid;
-      grid-template-columns: 196px 1fr;
-      grid-template-rows: 48px 1fr;
-      height: 100vh;
-    }
-
-    /* ── Top bar ────────────────────────────────────────── */
-    .topbar {
-      grid-column: 1 / -1;
-      display: flex;
-      align-items: center;
-      padding: 0 18px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      gap: 8px;
-    }
-    .topbar-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--orange);
-      flex-shrink: 0;
-    }
-    .topbar-title {
-      font-size: 13px;
-      font-weight: 400;
-      color: var(--text-muted);
-      letter-spacing: .04em;
-      font-family: 'DM Mono', monospace;
-    }
-    .topbar-title strong { color: var(--text); font-weight: 600; }
-
-    /* ── Sidebar ────────────────────────────────────────── */
-    .sidebar {
-      padding: 14px 10px 10px;
-      border-right: 1px solid var(--border);
-      background: var(--surface);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      overflow-y: auto;
-    }
-    .sidebar-label {
-      font-size: 9px;
-      font-family: 'DM Mono', monospace;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--text-faint);
-      padding: 2px 6px 4px;
-    }
-
-    /* ── Link card ──────────────────────────────────────── */
-    .link-card {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 9px 10px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      cursor: grab;
-      transition: border-color var(--transition), background var(--transition), opacity var(--transition);
-      user-select: none;
-    }
-    .link-card:active { cursor: grabbing; }
-    .link-card-inner {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      flex: 1;
-      min-width: 0;
-      text-decoration: none;
-      cursor: pointer;
-    }
-    .link-card-name {
-      font-weight: 600;
-      font-size: 12.5px;
-      color: var(--orange);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .link-card-url {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      color: var(--text-faint);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .link-card:hover { border-color: var(--orange-dim); }
-    .link-card:hover .link-card-name { color: #d98d4a; }
-    .link-card.dragging  { opacity: .3; border-style: dashed; }
-    .link-card.drag-over { border-color: var(--orange); background: var(--orange-glow); }
-
-    .drag-handle {
-      color: var(--text-faint);
-      font-size: 11px;
-      cursor: grab;
-      flex-shrink: 0;
-      line-height: 1;
-      padding: 1px 2px;
-    }
-    .link-card-del {
-      background: none;
-      border: none;
-      color: var(--text-faint);
-      font-size: 11px;
-      cursor: pointer;
-      padding: 2px 4px;
-      border-radius: 4px;
-      transition: var(--transition);
-      flex-shrink: 0;
-      line-height: 1;
-    }
-    .link-card-del:hover { color: #c0504d; background: rgba(192,80,77,.15); }
-
-    /* ── Add-link form ──────────────────────────────────── */
-    #add-form {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      padding: 10px;
-      background: var(--surface-2);
-      border: 1px dashed var(--orange-dim);
-      border-radius: var(--radius);
-    }
-    #add-form input {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 12px;
-      padding: 6px 9px;
-      outline: none;
-      transition: border-color var(--transition);
-      width: 100%;
-    }
-    #add-form input:focus { border-color: var(--orange); }
-    #add-form input::placeholder { color: var(--text-faint); }
-    .btn-row { display: flex; gap: 5px; }
-    .btn-sm {
-      flex: 1;
-      padding: 5px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      font-size: 10px;
-      font-family: 'DM Mono', monospace;
-      cursor: pointer;
-      transition: var(--transition);
-      background: none;
-    }
-    .btn-confirm { border-color: var(--orange-dim); color: var(--orange); background: var(--orange-glow); }
-    .btn-confirm:hover { background: rgba(196,122,58,.28); }
-    .btn-cancel  { color: var(--text-muted); }
-    .btn-cancel:hover { border-color: var(--text-muted); color: var(--text); }
-
-    #add-link-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      padding: 8px;
-      background: none;
-      border: 1px dashed var(--border);
-      border-radius: var(--radius);
-      color: var(--text-faint);
-      font-size: 10.5px;
-      font-family: 'DM Mono', monospace;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    #add-link-btn:hover { border-color: var(--orange-dim); color: var(--orange); }
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
     .hidden { display: none !important; }
 
-    /* ── Main area ──────────────────────────────────────── */
-    .main {
+    .app {
+      width: min(1480px, calc(100% - 32px));
+      margin: 18px auto;
+    }
+
+    .topbar,
+    .panel {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      min-height: 58px;
       display: grid;
-      grid-template-columns: 1fr 200px;
-      gap: 14px;
-      padding: 14px;
-      overflow: hidden;
+      grid-template-columns: auto minmax(220px, 660px);
+      align-items: center;
+      gap: 28px;
+      padding: 10px 14px 10px 16px;
     }
 
-    /* ── Notes section (search fixed + notes scroll) ───── */
-    .notes-section {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      overflow: hidden;
-      height: 100%;
-    }
-
-    /* ── Search bar ─────────────────────────────────────── */
-    .search-bar {
-      display: flex;
-      gap: 7px;
-      flex-shrink: 0;
-    }
-    .search-bar input {
-      flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      padding: 9px 14px;
-      outline: none;
-      transition: border-color var(--transition);
-      caret-color: var(--orange);
-    }
-    .search-bar input:focus { border-color: var(--orange-dim); }
-    .search-bar input::placeholder { color: var(--text-faint); }
-    .search-bar button {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text-muted);
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      padding: 9px 14px;
-      cursor: pointer;
-      transition: var(--transition);
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .search-bar button:hover {
-      border-color: var(--orange-dim);
-      color: var(--orange);
-      background: var(--orange-glow);
-    }
-
-    /* ── Notepads scroll area ───────────────────────────── */
-    .notepads-col {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      overflow-y: auto;
-      flex: 1;
-      min-height: 0;
-      padding-right: 3px;
-    }
-
-    /* ── Notepad ────────────────────────────────────────── */
-    .notepad {
-      display: flex;
-      flex-direction: column;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      flex: 1;
-      min-height: 0;
-    }
-    .notepad-header {
+    .brand {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 9px 13px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
+      gap: 9px;
+      min-width: 0;
+      white-space: nowrap;
+      color: var(--muted);
     }
-    .notepad-dot {
-      width: 5px; height: 5px;
+    .brand-dot,
+    .section-dot {
+      width: 8px;
+      height: 8px;
+      flex: 0 0 auto;
       border-radius: 50%;
-      background: var(--orange);
-      flex-shrink: 0;
-      opacity: .65;
+      background: var(--accent);
+      box-shadow: 0 0 16px rgba(216, 134, 67, .25);
     }
-    .note-title-input {
-      flex: 1;
-      background: none;
-      border: none;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 12.5px;
-      font-weight: 600;
-      outline: none;
-      caret-color: var(--orange);
-    }
-    .note-title-input::placeholder { color: var(--text-faint); }
-    .note-body-textarea {
-      flex: 1;
-      background: none;
-      border: none;
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-      font-size: 11.5px;
-      line-height: 1.75;
-      padding: 10px 13px;
-      resize: none;
-      outline: none;
-      caret-color: var(--orange);
-      min-height: 0;
-    }
-    .note-body-textarea::placeholder { color: var(--text-faint); }
-    .notepad-footer {
-      padding: 5px 13px;
-      border-top: 1px solid var(--border);
-      font-size: 9px;
-      font-family: 'DM Mono', monospace;
-      color: var(--text-faint);
-      display: flex;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-    .save-status.flash { color: var(--orange); }
+    .brand strong { color: var(--accent-strong); font-weight: 700; }
 
-    /* ── Right panel ────────────────────────────────────── */
-    .right-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      overflow-y: auto;
+    .search {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 9px;
     }
-    .widget-card {
-      background: var(--surface);
+
+    input,
+    textarea {
+      width: 100%;
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px;
-      flex-shrink: 0;
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      background: var(--surface-2);
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
     }
-    .widget-title {
-      font-size: 8px;
-      font-family: 'DM Mono', monospace;
+    input { min-height: 38px; padding: 0 11px; }
+    textarea { min-height: 310px; resize: vertical; padding: 12px; line-height: 1.6; }
+    input:focus,
+    textarea:focus {
+      border-color: rgba(216, 134, 67, .75);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+      background: #1d232b;
+    }
+    input::placeholder,
+    textarea::placeholder { color: var(--faint); }
+
+    .btn,
+    .icon-btn,
+    .add-btn {
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      transition: color var(--transition), border-color var(--transition), background var(--transition), transform var(--transition);
+    }
+    .btn:hover,
+    .icon-btn:hover,
+    .add-btn:hover {
+      color: var(--accent-strong);
+      border-color: rgba(216, 134, 67, .62);
+      background: var(--accent-soft);
+    }
+    .btn:active,
+    .icon-btn:active,
+    .add-btn:active { transform: translateY(1px); }
+    .btn { min-height: 38px; padding: 0 13px; font-weight: 700; font-size: 12px; }
+    .btn-primary { color: #ffd1a6; border-color: rgba(216, 134, 67, .52); background: var(--accent-soft); }
+    .btn-danger:hover { color: #f6aaaa; border-color: rgba(207, 119, 119, .7); background: rgba(207, 119, 119, .10); }
+    .icon-btn { display: inline-grid; place-items: center; width: 27px; height: 27px; padding: 0; font-family: var(--mono); font-size: 12px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(230px, 280px) minmax(360px, 1fr) minmax(220px, 250px);
+      grid-template-areas: "links scratch widgets";
+      gap: 14px;
+      align-items: start;
+      margin-top: 14px;
+    }
+
+    .panel { min-width: 0; overflow: hidden; }
+    .links-panel { grid-area: links; }
+    .scratch-panel { grid-area: scratch; }
+    .widgets { grid-area: widgets; display: grid; gap: 14px; min-width: 0; }
+
+    .panel-head {
+      min-height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 13px;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-title {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #9eb3c9;
+      font-family: var(--mono);
+      font-size: 10px;
       letter-spacing: .16em;
       text-transform: uppercase;
-      color: var(--text-faint);
-      margin-bottom: 9px;
     }
+    .section-dot { width: 6px; height: 6px; }
+
+    .panel-body { padding: 11px; }
+
+    .list { display: grid; gap: 6px; }
+
+    .shortcut,
+    .quick-ref {
+      position: relative;
+      display: grid;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      transition: border-color var(--transition), background var(--transition), opacity var(--transition), transform var(--transition);
+    }
+    .shortcut { grid-template-columns: minmax(0, 1fr) auto; min-height: 52px; padding: 7px 7px 7px 10px; }
+    .quick-ref { grid-template-columns: minmax(0, 1fr) auto; min-height: 34px; padding: 4px 5px 4px 9px; }
+    .shortcut:hover,
+    .quick-ref:hover { border-color: rgba(216, 134, 67, .54); background: #1e252d; }
+    .shortcut.dragging,
+    .quick-ref.dragging { opacity: .42; }
+    .shortcut.drag-over,
+    .quick-ref.drag-over { border-color: var(--accent-strong); transform: translateY(2px); }
+
+    .shortcut-link,
+    .quick-ref-link {
+      min-width: 0;
+      text-decoration: none;
+      overflow: hidden;
+    }
+    .shortcut-name {
+      display: block;
+      overflow: hidden;
+      color: #f1bd87;
+      font-weight: 700;
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .shortcut-url {
+      display: block;
+      overflow: hidden;
+      margin-top: 4px;
+      color: #8396aa;
+      font-family: var(--mono);
+      font-size: 9px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .quick-ref-link {
+      color: #a8bbce;
+      font-family: var(--mono);
+      font-size: 10px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .quick-ref-link:hover { color: var(--accent-strong); }
+
+    .item-actions {
+      display: flex;
+      gap: 3px;
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .shortcut:hover .item-actions,
+    .shortcut:focus-within .item-actions,
+    .quick-ref:hover .item-actions,
+    .quick-ref:focus-within .item-actions { opacity: 1; }
+    .drag-btn { cursor: grab; }
+    .drag-btn:active { cursor: grabbing; }
+
+    .add-btn {
+      width: 100%;
+      min-height: 37px;
+      margin-top: 8px;
+      border-style: dashed;
+      color: #8793a0;
+      font-size: 11px;
+    }
+
+    .inline-form {
+      display: grid;
+      gap: 7px;
+      margin-top: 8px;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: rgba(27, 32, 39, .72);
+    }
+    .inline-form input { min-height: 34px; font-size: 12px; }
+    .form-actions { display: flex; gap: 7px; }
+    .form-actions .btn { min-height: 32px; padding: 0 10px; font-size: 11px; }
+
+    .scratch-wrap { padding: 11px; }
+    .scratch-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 7px;
+      color: #73869a;
+      font-family: var(--mono);
+      font-size: 9px;
+    }
+    .saved.flash { color: var(--accent-strong); }
+
     .clock {
-      font-family: 'DM Mono', monospace;
-      font-size: 24px;
-      font-weight: 500;
-      color: var(--text);
+      padding: 12px 12px 13px;
+      color: #f1f4f7;
+      font-family: var(--mono);
+      font-size: clamp(23px, 3vw, 30px);
       letter-spacing: .03em;
-      line-height: 1;
+      white-space: nowrap;
     }
     .clock-date {
-      font-size: 9.5px;
-      color: var(--text-muted);
-      margin-top: 5px;
-      font-family: 'DM Mono', monospace;
+      margin-top: 7px;
+      color: #8396aa;
+      font-size: 9px;
+      letter-spacing: .05em;
     }
-    .quick-links {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .quick-link {
-      display: block;
-      padding: 5px 8px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 10px;
-      color: var(--text-muted);
-      text-decoration: none;
-      font-family: 'DM Mono', monospace;
-      transition: var(--transition);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .quick-link:hover { border-color: var(--orange-dim); color: var(--orange); }
 
-    /* scrollbar */
-    ::-webkit-scrollbar { width: 3px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .empty {
+      padding: 8px 3px 4px;
+      color: var(--faint);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    @media (max-width: 1040px) {
+      .app { width: min(940px, calc(100% - 24px)); margin-top: 12px; }
+      .layout {
+        grid-template-columns: minmax(210px, 260px) minmax(340px, 1fr);
+        grid-template-areas:
+          "links scratch"
+          "widgets scratch";
+      }
+      .widgets { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .app { width: min(620px, calc(100% - 16px)); margin: 8px auto; }
+      .topbar { grid-template-columns: 1fr; gap: 9px; padding: 11px; }
+      .layout {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "links"
+          "scratch"
+          "widgets";
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .widgets { gap: 10px; }
+      textarea { min-height: 220px; }
+      .item-actions { opacity: 1; }
+    }
   </style>
 </head>
 <body>
-<div class="app">
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><span class="brand-dot"></span><span><strong>Tutz</strong> Steam Home</span></div>
+      <form class="search" id="search-form" role="search">
+        <input id="search-input" type="search" autocomplete="off" placeholder="Pesquisar no Google..." aria-label="Pesquisar no Google" />
+        <button class="btn btn-primary" type="submit">Pesquisar</button>
+      </form>
+    </header>
 
-  <!-- TOP BAR -->
-  <header class="topbar">
-    <div class="topbar-dot"></div>
-    <div class="topbar-title"><strong>Tutz</strong> Steam Home</div>
-  </header>
-
-  <!-- SIDEBAR -->
-  <nav class="sidebar" id="sidebar">
-    <div class="sidebar-label">Links</div>
-    <!-- link cards injected by JS -->
-    <div id="add-form" class="hidden">
-      <input id="form-name" type="text" placeholder="Nome (ex: HLTV)" />
-      <input id="form-url"  type="text" placeholder="URL (ex: https://hltv.org)" />
-      <div class="btn-row">
-        <button class="btn-sm btn-confirm" id="form-confirm">+ Salvar</button>
-        <button class="btn-sm btn-cancel"  id="form-cancel">Cancelar</button>
-      </div>
-    </div>
-    <button id="add-link-btn">＋ Novo link</button>
-  </nav>
-
-  <!-- MAIN -->
-  <main class="main">
-    <div class="notes-section">
-      <div class="search-bar">
-        <input id="search-input" type="text" placeholder="Pesquisar no Google…" autocomplete="off" />
-        <button id="search-btn">Buscar →</button>
-      </div>
-      <div class="notepads-col" id="notepads-col"></div>
-    </div>
-
-    <aside class="right-panel">
-      <div class="widget-card">
-        <div class="widget-title">Hora local</div>
-        <div class="clock"      id="clock">00:00:00</div>
-        <div class="clock-date" id="clock-date">–</div>
-      </div>
-      <div class="widget-card">
-        <div class="widget-title">Referência rápida</div>
-        <div class="quick-links">
-          <a class="quick-link" href="https://hltv.org"                     target="_blank">HLTV</a>
-          <a class="quick-link" href="https://liquipedia.net/counterstrike"  target="_blank">Liquipedia CS</a>
-          <a class="quick-link" href="https://csstats.gg"                   target="_blank">csstats.gg</a>
-          <a class="quick-link" href="https://tracker.gg/cs2"               target="_blank">Tracker.gg CS2</a>
-          <a class="quick-link" href="https://prosettings.net/cs2"          target="_blank">ProSettings CS2</a>
-          <a class="quick-link" href="https://github.com"                   target="_blank">GitHub</a>
+    <main class="layout">
+      <section class="panel links-panel" aria-labelledby="links-title">
+        <header class="panel-head">
+          <div class="panel-title" id="links-title"><span class="section-dot"></span>Links</div>
+        </header>
+        <div class="panel-body">
+          <div class="list" id="shortcuts-list"></div>
+          <button class="add-btn" id="shortcut-add-open" type="button">+ Novo link</button>
+          <form class="inline-form hidden" id="shortcut-form">
+            <input id="shortcut-name" type="text" maxlength="48" placeholder="Nome" autocomplete="off" required />
+            <input id="shortcut-url" type="text" maxlength="512" placeholder="URL" autocomplete="off" required />
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Salvar</button>
+              <button class="btn" id="shortcut-add-cancel" type="button">Cancelar</button>
+            </div>
+          </form>
         </div>
-      </div>
-    </aside>
-  </main>
-</div>
+      </section>
 
-<script>
-/* ══════════════════════════════════════════════
-   LINKS
-══════════════════════════════════════════════ */
-const DEFAULT_LINKS = [
-  { name: 'Youtube',         url: 'https://youtube.com'            },
-  { name: 'CSNades',         url: 'https://csnades.gg'             },
-  { name: 'CSRep',           url: 'https://csrep.gg'               },
-  { name: 'Steam Store',     url: 'https://store.steampowered.com' },
-  { name: 'Steam Community', url: 'https://steamcommunity.com'     },
-  { name: 'FACEIT',          url: 'https://faceit.com'             },
-  { name: 'Leetify',         url: 'https://leetify.com'            },
-];
+      <section class="panel scratch-panel" aria-labelledby="scratch-title">
+        <header class="panel-head">
+          <div class="panel-title" id="scratch-title"><span class="section-dot"></span>Rascunho local</div>
+        </header>
+        <div class="scratch-wrap">
+          <textarea id="scratch" spellcheck="true" placeholder="Notas temporárias salvas apenas neste navegador..."></textarea>
+          <div class="scratch-meta">
+            <span class="saved" id="scratch-status">salvo localmente</span>
+            <span id="scratch-count">0 caracteres</span>
+          </div>
+        </div>
+      </section>
 
-let links = JSON.parse(localStorage.getItem('sh_links') || 'null') || DEFAULT_LINKS;
+      <aside class="widgets">
+        <section class="panel" aria-labelledby="clock-title">
+          <header class="panel-head"><div class="panel-title" id="clock-title">Hora local</div></header>
+          <div class="clock"><div id="clock">00:00:00</div><div class="clock-date" id="clock-date">–</div></div>
+        </section>
 
-const sidebar  = document.getElementById('sidebar');
-const addForm  = document.getElementById('add-form');
-const addBtn   = document.getElementById('add-link-btn');
-const formName = document.getElementById('form-name');
-const formUrl  = document.getElementById('form-url');
+        <section class="panel" aria-labelledby="quick-title">
+          <header class="panel-head"><div class="panel-title" id="quick-title">Referência rápida</div></header>
+          <div class="panel-body">
+            <div class="list" id="quick-list"></div>
+            <button class="add-btn" id="quick-add-open" type="button">+ Adicionar referência</button>
+            <form class="inline-form hidden" id="quick-form">
+              <input id="quick-name" type="text" maxlength="48" placeholder="Título exibido" autocomplete="off" required />
+              <input id="quick-url" type="text" maxlength="512" placeholder="URL" autocomplete="off" required />
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Salvar</button>
+                <button class="btn" id="quick-add-cancel" type="button">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
 
-let dragSrcIdx = null;
+  <script>
+    (() => {
+      'use strict';
 
-function saveLinks() { localStorage.setItem('sh_links', JSON.stringify(links)); }
+      const DEFAULT_SHORTCUTS = [
+        { name: 'YouTube', url: 'https://youtube.com' },
+        { name: 'CSNades', url: 'https://csnades.gg' },
+        { name: 'CSRep', url: 'https://csrep.gg' },
+        { name: 'Steam Store', url: 'https://store.steampowered.com' },
+        { name: 'Steam Community', url: 'https://steamcommunity.com' },
+        { name: 'FACEIT', url: 'https://faceit.com' },
+        { name: 'Leetify', url: 'https://leetify.com' }
+      ];
 
-function renderLinks() {
-  sidebar.querySelectorAll('.link-card').forEach(el => el.remove());
+      const DEFAULT_QUICK_REFS = [
+        { name: 'HLTV', url: 'https://hltv.org' },
+        { name: 'Liquipedia CS', url: 'https://liquipedia.net/counterstrike' },
+        { name: 'csstats.gg', url: 'https://csstats.gg' },
+        { name: 'Tracker.gg CS2', url: 'https://tracker.gg/cs2' },
+        { name: 'ProSettings CS2', url: 'https://prosettings.net/cs2' },
+        { name: 'GitHub', url: 'https://github.com' }
+      ];
 
-  links.forEach((link, idx) => {
-    const el = document.createElement('div');
-    el.className   = 'link-card';
-    el.draggable   = true;
-    el.dataset.idx = idx;
-    el.innerHTML   = `
-      <span class="drag-handle" title="Reordenar">⠿</span>
-      <a class="link-card-inner" href="${escAttr(link.url)}">
-        <span class="link-card-name">${escHtml(link.name)}</span>
-        <span class="link-card-url">${escHtml(link.url.replace(/^https?:\/\//, ''))}</span>
-      </a>
-      <button class="link-card-del" title="Remover">✕</button>
-    `;
+      const storage = {
+        get(key, fallback = null) {
+          try {
+            const value = localStorage.getItem(key);
+            return value === null ? fallback : value;
+          } catch { return fallback; }
+        },
+        set(key, value) {
+          try { localStorage.setItem(key, value); return true; }
+          catch { return false; }
+        }
+      };
 
-    el.addEventListener('dragstart', e => {
-      dragSrcIdx = idx;
-      setTimeout(() => el.classList.add('dragging'), 0);
-      e.dataTransfer.effectAllowed = 'move';
-    });
-    el.addEventListener('dragend', () => {
-      el.classList.remove('dragging');
-      sidebar.querySelectorAll('.link-card').forEach(c => c.classList.remove('drag-over'));
-    });
-    el.addEventListener('dragover', e => {
-      e.preventDefault();
-      sidebar.querySelectorAll('.link-card').forEach(c => c.classList.remove('drag-over'));
-      el.classList.add('drag-over');
-    });
-    el.addEventListener('drop', e => {
-      e.preventDefault();
-      const targetIdx = +el.dataset.idx;
-      if (dragSrcIdx === null || dragSrcIdx === targetIdx) return;
-      const [moved] = links.splice(dragSrcIdx, 1);
-      links.splice(targetIdx, 0, moved);
-      saveLinks();
-      renderLinks();
-    });
+      const $ = id => document.getElementById(id);
 
-    el.querySelector('.link-card-inner').addEventListener('click', e => {
-      e.stopPropagation();
-      window.location.href = link.url;
-    });
+      function clone(value) { return JSON.parse(JSON.stringify(value)); }
+      function readJson(key, fallback) {
+        try {
+          const parsed = JSON.parse(storage.get(key, 'null'));
+          return Array.isArray(parsed) ? parsed : clone(fallback);
+        } catch { return clone(fallback); }
+      }
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, char => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[char]);
+      }
+      function validUrl(value) {
+        let normalized = String(value || '').trim();
+        if (!normalized) return null;
+        if (!/^https?:\/\//i.test(normalized)) normalized = 'https://' + normalized;
+        try {
+          const parsed = new URL(normalized);
+          if (!/^https?:$/.test(parsed.protocol)) return null;
+          return parsed.href;
+        } catch { return null; }
+      }
+      function displayUrl(value) {
+        try {
+          const parsed = new URL(value);
+          return (parsed.host + parsed.pathname).replace(/\/$/, '') || parsed.host;
+        } catch { return String(value).replace(/^https?:\/\//i, '').replace(/\/$/, ''); }
+      }
+      function setFormVisible(form, openButton, visible, focusTarget) {
+        form.classList.toggle('hidden', !visible);
+        openButton.classList.toggle('hidden', visible);
+        if (visible && focusTarget) focusTarget.focus();
+      }
+      function resetForm(form) { form.reset(); }
 
-    el.querySelector('.link-card-del').addEventListener('click', e => {
-      e.stopPropagation();
-      links.splice(idx, 1);
-      saveLinks();
-      renderLinks();
-    });
+      let shortcuts = readJson('sh_links', DEFAULT_SHORTCUTS);
+      let quickRefs = readJson('sh_quick_refs', DEFAULT_QUICK_REFS);
 
-    sidebar.insertBefore(el, addForm);
-  });
-}
+      const shortcutsList = $('shortcuts-list');
+      const quickList = $('quick-list');
 
-addBtn.addEventListener('click', () => {
-  addForm.classList.remove('hidden');
-  addBtn.classList.add('hidden');
-  formName.focus();
-});
-document.getElementById('form-cancel').addEventListener('click', () => {
-  addForm.classList.add('hidden');
-  addBtn.classList.remove('hidden');
-  formName.value = formUrl.value = '';
-});
-document.getElementById('form-confirm').addEventListener('click', () => {
-  const name = formName.value.trim();
-  let   url  = formUrl.value.trim();
-  if (!name || !url) return;
-  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-  links.push({ name, url });
-  saveLinks();
-  renderLinks();
-  formName.value = formUrl.value = '';
-  addForm.classList.add('hidden');
-  addBtn.classList.remove('hidden');
-});
+      function persistShortcuts() { storage.set('sh_links', JSON.stringify(shortcuts)); }
+      function persistQuickRefs() { storage.set('sh_quick_refs', JSON.stringify(quickRefs)); }
 
-/* ══════════════════════════════════════════════
-   NOTEPADS — 3 independent
-══════════════════════════════════════════════ */
-const NOTES = [
-  { id: 'note1', ph: 'Escreva aqui…'  },
-  { id: 'note2', ph: 'Segunda nota…'  },
-  { id: 'note3', ph: 'Terceira nota…' },
-];
+      function makeActions(onDelete) {
+        const actions = document.createElement('span');
+        actions.className = 'item-actions';
 
-const col = document.getElementById('notepads-col');
+        const drag = document.createElement('button');
+        drag.className = 'icon-btn drag-btn';
+        drag.type = 'button';
+        drag.title = 'Arrastar para reordenar';
+        drag.setAttribute('aria-label', 'Arrastar para reordenar');
+        drag.textContent = '⋮⋮';
 
-NOTES.forEach(cfg => {
-  const wrap = document.createElement('div');
-  wrap.className = 'notepad';
-  wrap.innerHTML = `
-    <div class="notepad-header">
-      <div class="notepad-dot"></div>
-      <input class="note-title-input" type="text"
-             placeholder="Título…" spellcheck="false"
-             value="${escAttr(localStorage.getItem(cfg.id + '_title') || '')}" />
-    </div>
-    <textarea class="note-body-textarea"
-              placeholder="${escAttr(cfg.ph)}"
-              spellcheck="false"></textarea>
-    <div class="notepad-footer">
-      <span class="save-status">salvo</span>
-      <span class="char-count">0 chars</span>
-    </div>
-  `;
+        const remove = document.createElement('button');
+        remove.className = 'icon-btn btn-danger';
+        remove.type = 'button';
+        remove.title = 'Excluir';
+        remove.setAttribute('aria-label', 'Excluir');
+        remove.textContent = '×';
+        remove.addEventListener('click', event => {
+          event.preventDefault();
+          event.stopPropagation();
+          onDelete();
+        });
 
-  const titleEl  = wrap.querySelector('.note-title-input');
-  const bodyEl   = wrap.querySelector('.note-body-textarea');
-  const statusEl = wrap.querySelector('.save-status');
-  const countEl  = wrap.querySelector('.char-count');
+        actions.append(drag, remove);
+        return actions;
+      }
 
-  // restore body (set via property to avoid HTML escaping issues)
-  bodyEl.value = localStorage.getItem(cfg.id + '_body') || '';
-  countEl.textContent = bodyEl.value.length + ' chars';
+      function enableReorder(element, list, index, save, render) {
+        element.draggable = true;
+        element.addEventListener('dragstart', event => {
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', String(index));
+          element.classList.add('dragging');
+        });
+        element.addEventListener('dragend', () => {
+          element.classList.remove('dragging');
+          document.querySelectorAll('.drag-over').forEach(item => item.classList.remove('drag-over'));
+        });
+        element.addEventListener('dragover', event => {
+          event.preventDefault();
+          element.classList.add('drag-over');
+        });
+        element.addEventListener('dragleave', () => element.classList.remove('drag-over'));
+        element.addEventListener('drop', event => {
+          event.preventDefault();
+          element.classList.remove('drag-over');
+          const source = Number(event.dataTransfer.getData('text/plain'));
+          if (!Number.isInteger(source) || source === index || source < 0 || source >= list.length) return;
+          const [moved] = list.splice(source, 1);
+          list.splice(index, 0, moved);
+          save();
+          render();
+        });
+      }
 
-  let timer;
-  function scheduleSave() {
-    clearTimeout(timer);
-    statusEl.textContent = 'digitando…';
-    statusEl.classList.remove('flash');
-    timer = setTimeout(() => {
-      localStorage.setItem(cfg.id + '_title', titleEl.value);
-      localStorage.setItem(cfg.id + '_body',  bodyEl.value);
-      statusEl.textContent = 'salvo';
-      statusEl.classList.add('flash');
-      setTimeout(() => statusEl.classList.remove('flash'), 1400);
-    }, 700);
-  }
+      function renderShortcuts() {
+        shortcutsList.replaceChildren();
+        if (!shortcuts.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = 'Nenhum link salvo.';
+          shortcutsList.append(empty);
+          return;
+        }
+        shortcuts.forEach((shortcut, index) => {
+          const card = document.createElement('div');
+          card.className = 'shortcut';
 
-  titleEl.addEventListener('input', scheduleSave);
-  bodyEl.addEventListener('input', () => {
-    countEl.textContent = bodyEl.value.length + ' chars';
-    scheduleSave();
-  });
+          const link = document.createElement('a');
+          link.className = 'shortcut-link';
+          link.href = shortcut.url;
+          link.innerHTML = `<span class="shortcut-name">${escapeHtml(shortcut.name)}</span><span class="shortcut-url">${escapeHtml(displayUrl(shortcut.url))}</span>`;
 
-  col.appendChild(wrap);
-});
+          const actions = makeActions(() => {
+            shortcuts.splice(index, 1);
+            persistShortcuts();
+            renderShortcuts();
+          });
 
-/* ══════════════════════════════════════════════
-   SEARCH
-══════════════════════════════════════════════ */
-function doSearch() {
-  const q = document.getElementById('search-input').value.trim();
-  if (!q) return;
-  window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(q);
-}
-document.getElementById('search-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') doSearch();
-});
-document.getElementById('search-btn').addEventListener('click', doSearch);
+          card.append(link, actions);
+          enableReorder(card, shortcuts, index, persistShortcuts, renderShortcuts);
+          shortcutsList.append(card);
+        });
+      }
 
-/* ══════════════════════════════════════════════
-   CLOCK
-══════════════════════════════════════════════ */
-function pad(n) { return String(n).padStart(2, '0'); }
-function tickClock() {
-  const now    = new Date();
-  const days   = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  document.getElementById('clock').textContent =
-    pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-  document.getElementById('clock-date').textContent =
-    days[now.getDay()] + ' · ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
-}
-setInterval(tickClock, 1000);
-tickClock();
+      function renderQuickRefs() {
+        quickList.replaceChildren();
+        if (!quickRefs.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = 'Nenhuma referência salva.';
+          quickList.append(empty);
+          return;
+        }
+        quickRefs.forEach((reference, index) => {
+          const item = document.createElement('div');
+          item.className = 'quick-ref';
 
-/* ── Helpers ── */
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-function escAttr(s) {
-  return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
+          const link = document.createElement('a');
+          link.className = 'quick-ref-link';
+          link.href = reference.url;
+          link.target = '_blank';
+          link.rel = 'noopener';
+          link.textContent = reference.name;
 
-/* ── Init ── */
-renderLinks();
-</script>
+          const actions = makeActions(() => {
+            quickRefs.splice(index, 1);
+            persistQuickRefs();
+            renderQuickRefs();
+          });
+
+          item.append(link, actions);
+          enableReorder(item, quickRefs, index, persistQuickRefs, renderQuickRefs);
+          quickList.append(item);
+        });
+      }
+
+      function configureInlineForm({ openId, formId, cancelId, nameId, urlId, onSubmit }) {
+        const open = $(openId);
+        const form = $(formId);
+        const cancel = $(cancelId);
+        const name = $(nameId);
+        const url = $(urlId);
+
+        open.addEventListener('click', () => setFormVisible(form, open, true, name));
+        cancel.addEventListener('click', () => {
+          resetForm(form);
+          setFormVisible(form, open, false);
+        });
+        form.addEventListener('submit', event => {
+          event.preventDefault();
+          const normalized = validUrl(url.value);
+          const title = name.value.trim();
+          if (!title || !normalized) {
+            url.focus();
+            return;
+          }
+          onSubmit({ name: title, url: normalized });
+          resetForm(form);
+          setFormVisible(form, open, false);
+        });
+      }
+
+      configureInlineForm({
+        openId: 'shortcut-add-open', formId: 'shortcut-form', cancelId: 'shortcut-add-cancel',
+        nameId: 'shortcut-name', urlId: 'shortcut-url',
+        onSubmit(item) { shortcuts.push(item); persistShortcuts(); renderShortcuts(); }
+      });
+
+      configureInlineForm({
+        openId: 'quick-add-open', formId: 'quick-form', cancelId: 'quick-add-cancel',
+        nameId: 'quick-name', urlId: 'quick-url',
+        onSubmit(item) { quickRefs.push(item); persistQuickRefs(); renderQuickRefs(); }
+      });
+
+      const scratch = $('scratch');
+      const scratchStatus = $('scratch-status');
+      const scratchCount = $('scratch-count');
+      const previousNote = storage.get('note1_body', '');
+      scratch.value = storage.get('sh_scratch', previousNote || '');
+      scratchCount.textContent = `${scratch.value.length} caracteres`;
+      let scratchTimer = null;
+      scratch.addEventListener('input', () => {
+        scratchCount.textContent = `${scratch.value.length} caracteres`;
+        scratchStatus.textContent = 'digitando...';
+        scratchStatus.classList.remove('flash');
+        clearTimeout(scratchTimer);
+        scratchTimer = setTimeout(() => {
+          storage.set('sh_scratch', scratch.value);
+          scratchStatus.textContent = 'salvo localmente';
+          scratchStatus.classList.add('flash');
+          setTimeout(() => scratchStatus.classList.remove('flash'), 900);
+        }, 350);
+      });
+
+      $('search-form').addEventListener('submit', event => {
+        event.preventDefault();
+        const query = $('search-input').value.trim();
+        if (query) location.href = 'https://www.google.com/search?q=' + encodeURIComponent(query);
+      });
+
+      const pad = value => String(value).padStart(2, '0');
+      function updateClock() {
+        const now = new Date();
+        const days = ['dom.', 'seg.', 'ter.', 'qua.', 'qui.', 'sex.', 'sáb.'];
+        const months = ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'];
+        $('clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        $('clock-date').textContent = `${days[now.getDay()]} · ${pad(now.getDate())} ${months[now.getMonth()]} ${now.getFullYear()}`;
+      }
+
+      renderShortcuts();
+      renderQuickRefs();
+      updateClock();
+      setInterval(updateClock, 1000);
+    })();
+  </script>
 </body>
 </html>
